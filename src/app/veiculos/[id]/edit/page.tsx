@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Layout from "@/components/Layout";
 import VeiculoForm from "@/components/VeiculoForm";
@@ -8,7 +8,8 @@ import { Veiculo } from "@/types";
 import { veiculoService } from "@/services/veiculoService";
 import { Toaster, toast } from "react-hot-toast";
 
-export default function EditarVeiculoPage() {
+// Componente separado que usa useSearchParams
+function EditarVeiculoContent() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -77,48 +78,68 @@ export default function EditarVeiculoPage() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex justify-center items-center min-h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      </Layout>
+      <div className="flex justify-center items-center min-h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
   if (!veiculo) {
     return (
-      <Layout>
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Veículo não encontrado
-          </h2>
-        </div>
-      </Layout>
+      <div className="text-center">
+        <h2 className="text-xl font-semibold text-gray-900">
+          Veículo não encontrado
+        </h2>
+      </div>
     );
   }
 
   return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+          Editar Veículo
+        </h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Atualize os dados do veículo {veiculo.plate}
+          {veiculo.client_id && " (associado a um cliente)"}
+        </p>
+      </div>
+
+      <VeiculoForm
+        veiculo={veiculo}
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+        isLoading={saving}
+      />
+    </div>
+  );
+}
+
+// Loading component
+function LoadingFallback() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+          Editar Veículo
+        </h2>
+        <p className="mt-1 text-sm text-gray-500">Carregando...</p>
+      </div>
+      <div className="flex justify-center items-center min-h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    </div>
+  );
+}
+
+export default function EditarVeiculoPage() {
+  return (
     <Layout>
       <Toaster position="top-right" />
-
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-            Editar Veículo
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Atualize os dados do veículo {veiculo.plate}
-            {veiculo.client_id && " (associado a um cliente)"}
-          </p>
-        </div>
-
-        <VeiculoForm
-          veiculo={veiculo}
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-          isLoading={saving}
-        />
-      </div>
+      <Suspense fallback={<LoadingFallback />}>
+        <EditarVeiculoContent />
+      </Suspense>
     </Layout>
   );
 }

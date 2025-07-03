@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Layout from "@/components/Layout";
 import { Cliente, Veiculo } from "@/types";
@@ -18,7 +18,7 @@ export default function ClienteVeiculosPage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<number | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const clienteId = Number(params.id);
@@ -43,11 +43,11 @@ export default function ClienteVeiculosPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, router]);
 
   useEffect(() => {
     fetchData();
-  }, [params.id]);
+  }, [fetchData]);
 
   const handleDelete = async (veiculo: Veiculo) => {
     if (!veiculo.id) return;
